@@ -1,3 +1,4 @@
 data/
 .venv/
 .nfs*
+src/__pycache__/

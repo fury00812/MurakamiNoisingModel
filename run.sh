@@ -52,7 +52,7 @@ echo done.
 # Phase 3: Train the model
 #
 echo Phase 3: Train the model
-EXP_PATH=$SAVE_PATH/Phase3/no-tmp_batch100 #:)
+EXP_PATH=$SAVE_PATH/Phase3/no-pos-pros #:)
 mkdir -p $EXP_PATH
 echo running...
 export CUDA_VISIBLE_DEVICES=0
@@ -61,8 +61,8 @@ python $SRC_PATH/main.py \
 	--valid_dataset $SAVE_PATH/Phase2/validset.pth \
 	--test_dataset $SAVE_PATH/Phase2/testset.pth \
 	--dicts $SAVE_PATH/Phase1/dictionaries.pkl \
-	--out_dir $EXP_PATH --num_epoch 1000 --valid_epoch 1 \
-	--early_stopping 20 --batch_size 100 --max_vocab $VOCAB_SIZE \
+	--out_dir $EXP_PATH --num_epoch 100 --valid_epoch 1 \
+	--early_stopping 20 --batch_size 20 --max_vocab $VOCAB_SIZE \
 	--words_dim 200 --pos_dim 50 --pros_dim 50 --hidden_dim 200 \
 	--num_layers 2 --learning_rate 0.1 --dropout 0.2 \
 	--temperature 0.15 | tee $EXP_PATH/train.log
