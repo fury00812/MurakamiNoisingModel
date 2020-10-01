@@ -25,7 +25,7 @@ def get_args():
     return parser.parse_args()
 
 
-class DataSet:
+class DataSetGen:
     def __init__(self, seq_dicts, dict_dicts, max_vocab, max_len):
 #        self.X = torch.LongTensor([[5,6],[7,8],[9,10],[11,12],[13,14]])
 #        self.y = torch.LongTensor([0,1,2,3,4])
@@ -85,7 +85,7 @@ def main():
         dict_dicts = pickle.load(f)
 
     # create DataSet
-    dataset = DataSet(seq_dicts, dict_dicts, \
+    dataset = DataSetGen(seq_dicts, dict_dicts, \
                                     args.max_vocab, args.max_len)
 
     # save id sequences

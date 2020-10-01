@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
 from dataset import DataSet
+from dataset_gen import DataSetGen
 from build_vocab import PAD
 from build_vocab import Dictionary
 from birnn import BiRNN
@@ -21,12 +22,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def get_args():
     parser = argparse.ArgumentParser(description="main.py")
-    parser.add_argument("--train_dataset", required="True")
-    parser.add_argument("--valid_dataset", required="True")
+    parser.add_argument("--generate", action="store_true",
+                        help="Generation mode")
+    if not parser.parse_known_args()[0].generate:
+        parser.add_argument("--train_dataset", required="True")
+        parser.add_argument("--valid_dataset", required="True")
+        parser.add_argument("--out_dir", required="True")
+    else:
+        parser.add_argument("--out_path", required="True")
     parser.add_argument("--test_dataset")
     parser.add_argument("--dicts", required="True",
                         help="dictionaries of 4 types of Dictionary objects")
-    parser.add_argument("--out_dir", required="True")
     parser.add_argument("--save_path", default="",
                         help="checkpoint name saved in out_dir")
     parser.add_argument("--max_vocab", type=int, default=16000,
@@ -161,9 +167,45 @@ def calc_accuracy(hyp_l, ref_l):
     return accuracy, noise_accuracy
 
 
-def evaluate(args, model):
+def generate(args, model):
     """
     Load trained model and generate outputs
+    """
+    src_l = []
+    hyp_l = []
+    len_l = []
+    model.load_state_dict(torch.load(args.save_path))
+    model.to(device)
+    model.eval()
+    for batch in args.test_loader:
+        words= batch["words"].to(device)
+        pos = batch["pos"].to(device)
+        pros = batch["pronuns"].to(device)
+        seq_lengths = batch["len"].to(device)
+        hyp = model(words, pos, pros, seq_lengths)
+        hyp = hyp.max(dim=-1)[1].data.cpu().tolist()
+        src = words.cpu().tolist()
+        for b in range(len(hyp)):
+            for i in range(len(hyp[b])):
+                hyp[b][i] = args.dicts["labels"].id2word[hyp[b][i]]
+        for b in range(len(src)):
+            for i in range(len(src[b])):
+                src[b][i] = args.dicts["words"].id2word[src[b][i]]
+        seq_len = seq_lengths.tolist()
+        hyp_l += hyp
+        src_l += src
+        len_l += seq_len
+    for i in range(len(hyp_l)):
+        hyp_l[i] = hyp_l[i][:len_l[i]]
+        src_l[i] = src_l[i][:len_l[i]]
+        assert len(hyp_l[i])==len(src_l[i]), (hyp_l[i], src_l[i])
+
+    return src_l, hyp_l
+
+
+def evaluate(args, model):
+    """
+    Load trained model and generate outputs, then evaluate model
     """
     hyp_l = []
     ref_l = []
@@ -229,6 +271,21 @@ def main():
 
     # get sequence length
     args.max_len=len(args.test_dataset.__getitem__(0)["words"])
+
+    # generation (generate.sh / Phase 2)
+    if args.generate:
+        # generate label
+        src, label = generate(args, model)
+        # save files
+        out_path = Path(args.out_path+".src")
+        with open(out_path, mode="w") as f:
+            for s in src:
+                f.write((" ".join(s)+"\n"))
+        out_path = Path(args.out_path+".label")
+        with open(out_path, mode="w") as f:
+            for s in label:
+                f.write((" ".join(s)+"\n"))
+        exit()
 
     # eval_only
     if args.eval_only:

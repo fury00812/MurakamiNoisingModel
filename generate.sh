@@ -18,7 +18,7 @@ BASE_NAME=aspec.test.ja
 RAW_PATH=$RAW_PATH/$BASE_NAME
 DICT_PATH=$CSJ_PATH/Phase1/dictionaries.pkl
 MODEL_PATH=$CSJ_PATH/Phase3/first/best_epoch.pth
-DICT_PATH=$CSJ_PATH/Phase4/probs.pkl
+NOISE_MODEL_PATH=$CSJ_PATH/Phase4/probs.pkl
 
 mkdir -p $SAVE_PATH
 
@@ -40,32 +40,26 @@ echo -n running...
 python $SRC_PATH/dataset_gen.py \
 	--data_pkl $SAVE_PATH/Phase0/$BASE_NAME.feats.pkl \
 	--dict_pkl $DICT_PATH \
-	--out_dir $SAVE_PATH/Phase1 \
+	--out_path $SAVE_PATH/Phase1/$BASE_NAME.pth \
 	--max_vocab $VOCAB_SIZE --max_len 100
 echo done.
 
-##
-## Phase 2: Generate label sequences by pretrained model
-##
-#echo Phase 2: Train the model
 #
-## ここから未着手
-#EXP_PATH=$SAVE_PATH/Phase3/no-pos-pros #:)
-#mkdir -p $EXP_PATH
-#echo running...
-#export CUDA_VISIBLE_DEVICES=0
-#python $SRC_PATH/main.py \
-#	--train_dataset $SAVE_PATH/Phase2/trainset.pth \
-#	--valid_dataset $SAVE_PATH/Phase2/validset.pth \
-#	--test_dataset $SAVE_PATH/Phase2/testset.pth \
-#	--dicts $SAVE_PATH/Phase1/dictionaries.pkl \
-#	--out_dir $EXP_PATH --num_epoch 100 --valid_epoch 1 \
-#	--early_stopping 20 --batch_size 20 --max_vocab $VOCAB_SIZE \
-#	--words_dim 200 --pos_dim 50 --pros_dim 50 --hidden_dim 200 \
-#	--num_layers 2 --learning_rate 0.1 --dropout 0.2 \
-#	--temperature 0.15 | tee $EXP_PATH/train.log
-##	--eval_only --save_path "best_epoch.pth"
-#echo done.
+# Phase 2: Generate label sequences by pretrained model
+#
+echo Phase 2: Train the model
+mkdir -p $SAVE_PATH/Phase2
+echo running...
+export CUDA_VISIBLE_DEVICES=0
+python $SRC_PATH/main.py \
+	--test_dataset $SAVE_PATH/Phase1/$BASE_NAME.pth \
+	--dicts $DICT_PATH --save_path $MODEL_PATH \
+	--out_path $SAVE_PATH/Phase2/$BASE_NAME \
+	--batch_size 20 --max_vocab $VOCAB_SIZE \
+	--words_dim 200 --pos_dim 50 --pros_dim 50 --hidden_dim 200 \
+	--num_layers 2 --learning_rate 0.1 --dropout 0.2 \
+	--temperature 0.15 --generate
+echo done.
 #
 ##
 ## Phase 3: Calculate unigram probabilities of filler/errors
