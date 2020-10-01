@@ -6,6 +6,7 @@ output: filename.features, filename.pkl
 import os
 import argparse
 import re
+import unicodedata
 from pathlib import Path
 import pickle
 import MeCab
@@ -22,13 +23,14 @@ def get_features(tagger, text):
     word_l = []
     pos_l = []
     pros_l = []
+    text = unicodedata.normalize("NFKC", text)
     node = tagger.parseToNode(text)
     while node:
         word = node.surface
         pos = node.feature.split(",")[0]
         pros = node.feature.split(",")[-1]
 
-        if pos=="記号" and word=="，":
+        if pos=="名詞" and word==",":
             pos = "読点"
             word = "、"
         elif pos=="記号" and word=="。":
@@ -73,10 +75,10 @@ def main():
     with open(out_path, mode="w") as f:
         for i in range(len(all_sents)):
             f.write("SENT {}\n".format(i))
+            f.write("{}\n".format(all_sents[i]))
             f.write("w:{}\n".format(all_words[i]))
             f.write("p:{}\n".format(all_pos[i]))
             f.write("r:{}\n".format(all_pros[i]))
-
 
     out_path = Path(args.out_dir) / Path("{}.feats.pkl".format(name))
     data = {
@@ -86,6 +88,11 @@ def main():
     }
     with open(out_path, mode="wb") as f:
         pickle.dump(data, f) 
+
+    out_path = Path(args.out_dir) / Path("{}.tok".format(name))
+    with open(out_path, mode="w") as f:
+        for i in range(len(all_sents)):
+            f.write("{}\n".format(all_sents[i]))
 
 
 if __name__ == "__main__":
