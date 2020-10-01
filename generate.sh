@@ -34,7 +34,7 @@ echo done.
 #
 # Phase 1: Convert feature sequences from word to id.
 #
-echo Phase 1: Create train/valid/test set
+echo Phase 1: Convert feature sequences from word to id
 mkdir -p $SAVE_PATH/Phase1
 echo -n running...
 python $SRC_PATH/dataset_gen.py \
@@ -47,7 +47,7 @@ echo done.
 #
 # Phase 2: Generate label sequences by pretrained model
 #
-echo Phase 2: Train the model
+echo Phase 2: Generate label sequences by pretrained model
 mkdir -p $SAVE_PATH/Phase2
 echo running...
 export CUDA_VISIBLE_DEVICES=0
@@ -60,12 +60,16 @@ python $SRC_PATH/main.py \
 	--num_layers 2 --learning_rate 0.1 --dropout 0.2 \
 	--temperature 0.15 --generate
 echo done.
+
 #
-##
-## Phase 3: Calculate unigram probabilities of filler/errors
-##
-#echo Phase 4: Calculate unigram probs
-#mkdir -p $SAVE_PATH/Phase4
-#echo -n running...
-#python $SRC_PATH/csj_unigram.py --in_dir $RAW_PATH --out_dir $SAVE_PATH/Phase4
-#echo done.
+# Phase 3: Add filler/error noise
+#
+echo Phase 3: Add filler/error noise
+mkdir -p $SAVE_PATH/Phase3
+echo -n running...
+python $SRC_PATH/add_noise.py \
+	--noise_model $NOISE_MODEL_PATH \
+	--token_file $SAVE_PATH/Phase0/$BASE_NAME.tok \
+	--label_file $SAVE_PATH/Phase2/$BASE_NAME.label \
+	--out_path $SAVE_PATH/Phase3/$BASE_NAME
+echo done.
