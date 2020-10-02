@@ -9,3 +9,18 @@
      ```
      pipenv install --dev
      ```
+
+## get started
+The operation is completed by executing two shell scripts. Place the raw data in the right place before running it (see data / README.md for details).
+
+1. Train Noise labeling model
+
+```bash
+./run.sh
+```
+
+2. Add noise to Japanese files in the bilingual corpus
+
+```bash
+./generate.sh
+```
