@@ -1,5 +1,5 @@
 # About
-"自然発話に頑健な機械翻訳の検討[[pdf](https://ichiroex.github.io/paper/murakami19nlp.pdf)]"のノイズモデル.  
+"[自然発話に頑健な機械翻訳の検討](https://ichiroex.github.io/paper/murakami19nlp.pdf)" (村上ら, 言語処理学会 2019) の再現実装
 
 ## requirements
 - Python 3.7  
