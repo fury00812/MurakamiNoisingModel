@@ -20,6 +20,7 @@ def get_args():
     parser.add_argument("--out_dir", required="True")
     return parser.parse_args()
 
+
 def get_files():
     assert os.path.exists(args.in_dir)
     DIR = Path(args.in_dir)
